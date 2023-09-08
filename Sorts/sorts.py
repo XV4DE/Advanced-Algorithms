@@ -28,10 +28,11 @@ def additive_swap(my_list, a, b):
 
 def insertion_sort(l):
     for idx in range(1, len(l)):
-        while idx > 0:
-            if l[idx] > l[idx-1]:
-                l[idx], l[idx-1] = l[idx-1], l[idx]
-            idx -= 1
+        i = idx
+        while i > 0:
+            if l[i] > l[i-1]:
+                l[i], l[i-1] = l[i-1], l[i]
+            i -= 1
     return l
 
 

@@ -2,24 +2,39 @@ from sorts import *
 import test
 
 if __name__ == '__main__':
-    my_list = [3, 1, 4, 1, 5, 9]
-    insertion_sort(my_list)
-    print(my_list)
+    passes = 0
+    attempts = 0
 
-    my_list = [3, 1, 4, 1, 5, 9]
-    selection_sort(my_list)
-    print(my_list)
+    attempts += 1
+    if test.test_sort(insertion_sort):
+        passes += 1
 
-    my_list = [3, 1, 4, 1, 5, 9]
-    selection_sort(my_list)
-    print(my_list)
+    attempts += 1
+    if test.test_sort(selection_sort):
+        passes += 1
 
-    my_list = [1, 2,
-               3, 4]
-    my_list = transpose(my_list, 2)
-    print(my_list)
+    attempts += 1
+    if test.test_transpose(transpose):
+        passes += 1
 
-    my_list = [1, 2,
-               3, 4]
-    my_list = column_sort(my_list, 2)
-    print(my_list)
+    attempts += 1
+    if test.test_greatest(greatest):
+        passes += 1
+
+    attempts += 1
+    if test.test_column(column_sort):
+        passes += 1
+
+
+    print("Passed " + str(passes) + " of " + str(attempts) + " tests.")
+
+    print("Insertion sort")
+    for time in test.sorting_time_efficiency(insertion_sort):
+        print(time)
+
+    print()
+    print()
+    print()
+    print("Selection sort")
+    for time in test.sorting_time_efficiency(selection_sort):
+        print(time)
