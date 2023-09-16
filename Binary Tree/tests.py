@@ -227,7 +227,7 @@ def test_node_successor() -> bool:
 
 
 def test_node_remove() -> bool:
-    # try:
+    try:
         n = Node(0)
         n1 = Node(1)
         n.insert(n1)
@@ -249,7 +249,8 @@ def test_node_remove() -> bool:
                 ls = l.copy()
                 random.shuffle(ls)
                 t = Tree()
-                for num in l:
+                # originally used l instead of ls here, maybe I should consider using more descriptive variable names
+                for num in ls:
                     t.insert(Node(num))
                 remove = random.randint(0, size-1)
                 l.pop(remove)
@@ -265,13 +266,10 @@ def test_node_remove() -> bool:
                 while focus is not None and focus.successor() is not None:
                     tl.append(focus.successor().key)
                     focus = focus.successor()
-                print(tl)
-                print(l)
-                print(remove)
                 assert tl == l
         return True
-    # except:
-    #     return False
+    except:
+        return False
 
 
 def test_tree_search() -> bool:

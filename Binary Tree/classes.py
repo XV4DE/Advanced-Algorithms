@@ -63,35 +63,70 @@ class Node:
 
     # Remove this node without disrupting the tree property or loosing any nodes
     def remove(self):
-        r = None
-        if self.parent is None:
-            r = self.successor()
-        if self.lchild is None and self.rchild is None:
+        if self.num_children() == 0:
             if self.parent is not None:
-                if self.parent.lchild == self:
-                    self.parent.lchild = None
-                else:
-                    self.parent.rchild = None
-                self.parent = None
+                self.scrub_parent()
+        elif self.num_children() == 1:
+            return self.splice_out()
         else:
-            succ = self.successor()
-            r = succ.remove() if r is None else r
-            if self.lchild is not None:
-                self.lchild.parent = succ
-            succ.lchild = self.lchild
-            if self.rchild is not None:
-                self.rchild.parent = succ
-            succ.rchild = self.rchild
-            if self.parent is not None:
-                if self.parent.rchild == self:
-                    self.parent.rchild = succ
-                else:
-                    self.parent.lchild = succ
+            return self.rotate_out()
+
+    # return the number of children this node has, an int between 0 and 2
+    def num_children(self) -> int:
+        return int(self.lchild is not None) + int(self.rchild is not None)
+
+    # removes this node from its parent node and the parent node from this node, tcdr: destroys teh connection between this node and its parent
+    def scrub_parent(self):
+        if self.is_lchild():
+            self.parent.lchild = None
+        elif self.is_rchild():
+            self.parent.rchild = None
+        self.parent = None
+
+    # removes this node from the tree, assuming that it has one child, returns the new root of the tree if the root changed
+    def splice_out(self):
+        if self.lchild is not None:
+            child = self.lchild
+        else:
+            child = self.rchild
+
+        if self.is_lchild():
+            self.parent.lchild = child
+            child.parent = self.parent
+        elif self.is_rchild():
+            self.parent.rchild = child
+            child.parent = self.parent
+        else:
+            child.scrub_parent()
+            return child
+
+    # removes this node from the tree, assuming this node has two children, returns the new root of the tree if it changed
+    def rotate_out(self):
+        succ = self.successor()
+        root = succ.remove()
+        if self.parent is not None:
             succ.parent = self.parent
-            self.parent = None
-            self.lchild = None
-            self.rchild = None
-        return r
+            if self.is_rchild():
+                self.parent.rchild = succ
+            else:
+                self.parent.lchild = succ
+        succ.lchild = self.lchild
+        if self.lchild is not None:
+            self.lchild.parent = succ
+        succ.rchild = self.rchild
+        if self.rchild is not None:
+            self.rchild.parent = succ
+        if self.parent is None:
+            return succ
+        return root
+
+    # return True if this node is a left child, False otherwise
+    def is_lchild(self):
+        return self.parent and self.parent.lchild == self
+
+    # return True if this node is a right child, False otherwise
+    def is_rchild(self):
+        return self.parent and self.parent.rchild == self
 
     # Get the smallest node in the tree where this node is the root
     def leftmost(self):
@@ -143,9 +178,11 @@ class Tree:
 
     # Remove a node in the tree from the tree while maintaining the tree property
     def remove(self, n: Node):
+        if self.root.lchild is None and self.root.rchild is None and n == self.root:
+            self.root = None
+            return
         new_root = n.remove()
-        # Had to fix this up to account for the possibility that there are now no nodes in the tree.
-        if self.root.lchild is None and self.root.rchild is None:
+        if new_root is not None:
             self.root = new_root
 
 
