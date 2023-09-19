@@ -147,6 +147,19 @@ class Node:
             return focus.parent
         return None
 
+    # Return the depth of the tree for which this node is the root (how many connections it takes to get to the node
+    # that it takes the most connections to get to)
+    def depth(self):
+        if self.lchild is not None:
+            ldepth = self.lchild.depth()
+        else:
+            ldepth = 0
+        if self.rchild is not None:
+            rdepth = self.rchild.depth()
+        else:
+            rdepth = 0
+        return max(ldepth, rdepth) + 1
+
 
 # The binary tree itself. Most of the fun stuff happens in the nodes, the structure of the tree is mostly there to serve
 # as a package for the root and its descendants.
@@ -184,6 +197,13 @@ class Tree:
         new_root = n.remove()
         if new_root is not None:
             self.root = new_root
+
+    # Get the depth of the tree
+    def depth(self) -> int:
+        if self.root is None:
+            return 0
+        else:
+            return self.root.depth()
 
 
 # Takes a sorted list (lowest to highest) and arranges it for the creation of an optimal binary tree (original list is not modified)

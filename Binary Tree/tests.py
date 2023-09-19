@@ -3,7 +3,7 @@ import random
 import tqdm
 
 funcs = [Node.__init__, Node.__gt__, Node.insert, Node.tree_walk, Tree.__init__, Tree.insert, Tree.walk, tree_sort,
-         Node.search, Tree.search, Node.successor, Node.remove]
+         Node.search, Tree.search, Node.successor, Node.remove, Tree.depth]
 
 
 def test_all():
@@ -51,6 +51,8 @@ def test(func) -> bool:
         return test_node_successor()
     if func.__qualname__ == "Node.remove":
         return test_node_remove()
+    if func.__qualname__ == "Tree.depth":
+        return test_tree_depth()
 
     return False
 
@@ -279,6 +281,28 @@ def test_tree_search() -> bool:
         n = Node(1)
         t.insert(n)
         assert t.search(1) == n
+        return True
+    except:
+        return False
+
+
+def test_tree_depth() -> bool:
+    try:
+        for i in range(10):
+            t = Tree()
+            for num in range(i):
+                t.insert(Node(num))
+            assert t.depth() == i
+
+        t1 = Tree()
+        t1.insert(Node(3))
+        t1.insert(Node(1))
+        t1.insert(Node(4))
+        t1.insert(Node(1))
+        t1.insert(Node(5))
+        t1.insert(Node(9))
+        assert t1.depth() == 4
+
         return True
     except:
         return False
