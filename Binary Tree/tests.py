@@ -3,18 +3,18 @@ import random
 import tqdm
 
 funcs = [Node.__init__, Node.__gt__, Node.insert, Node.tree_walk, Tree.__init__, Tree.insert, Tree.walk, tree_sort,
-         Node.search, Tree.search, Node.successor, Node.remove, Tree.depth]
+         Node.search, Tree.search, Node.successor, Node.remove, Tree.depth, Tree.breadth_first_enumeration]
 
 
 def test_all():
     attempts = len(funcs)
     successes = 0
     fails = []
-    for func in funcs:
-        if test(func):
+    for func in tqdm.tqdm(range(len(funcs))):
+        if test(funcs[func]):
             successes += 1
         else:
-            fails.append(func)
+            fails.append(funcs[func])
     if len(fails) == 0:
         print("Success! All tests passed.")
     else:
@@ -53,6 +53,8 @@ def test(func) -> bool:
         return test_node_remove()
     if func.__qualname__ == "Tree.depth":
         return test_tree_depth()
+    if func.__qualname__ == "Tree.breadth_first_enumeration":
+        return test_tree_breadth_first_enumeration()
 
     return False
 
@@ -245,7 +247,7 @@ def test_node_remove() -> bool:
         assert n.rchild == n2
         assert n2.parent == n
 
-        for i in tqdm.tqdm(range(100)):
+        for i in range(100):
             for size in range(1, 100):
                 l = [num for num in range(size)]
                 ls = l.copy()
@@ -303,6 +305,22 @@ def test_tree_depth() -> bool:
         t1.insert(Node(9))
         assert t1.depth() == 4
 
+        return True
+    except:
+        return False
+
+
+def test_tree_breadth_first_enumeration() -> bool:
+    try:
+        for size in range(100):
+            l = [i for i in range(size)]
+            random.shuffle(l)
+            t = Tree()
+            for num in l:
+                t.insert(Node(num))
+            enum = t.breadth_first_enumeration()
+            for i in range(1, len(enum)):
+                assert enum[i].layer() == enum[i-1].layer() or enum[i].layer() == enum[i-1].layer()+1
         return True
     except:
         return False

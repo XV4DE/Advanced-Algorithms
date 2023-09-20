@@ -75,7 +75,8 @@ class Node:
     def num_children(self) -> int:
         return int(self.lchild is not None) + int(self.rchild is not None)
 
-    # removes this node from its parent node and the parent node from this node, tcdr: destroys teh connection between this node and its parent
+    # removes this node from its parent node and the parent node from this node, tcdr: destroys teh connection between
+    # this node and its parent
     def scrub_parent(self):
         if self.is_lchild():
             self.parent.lchild = None
@@ -160,6 +161,11 @@ class Node:
             rdepth = 0
         return max(ldepth, rdepth) + 1
 
+    def layer(self):
+        if self.parent is None:
+            return 1
+        return self.parent.layer() + 1
+
 
 # The binary tree itself. Most of the fun stuff happens in the nodes, the structure of the tree is mostly there to serve
 # as a package for the root and its descendants.
@@ -177,7 +183,8 @@ class Tree:
     # Return a sorted list of the keys in the tree
     def walk(self):
         if self.root is None:
-            # I made a mistake here. At first I returned None but I realized that that didn't make sense when I implemented random testing
+            # I made a mistake here. At first I returned None but I realized that that didn't make sense when I
+            # implemented random testing
             return []
         else:
             return self.root.tree_walk()
@@ -205,21 +212,35 @@ class Tree:
         else:
             return self.root.depth()
 
+    # returns a list containing all members of the tree, in order of their layer, then their position within the layer
+    def breadth_first_enumeration(self):
+        enum = []
+        if self.root is None:
+            return []
+        layers = [[self.root]]
+        layer = -1
+        while layers[layer] != []:
+            layer += 1
+            layers.append([])
+            for n in layers[layer]:
+                if n.lchild is not None:
+                    layers[layer + 1].append(n.lchild)
+                if n.rchild is not None:
+                    layers[layer + 1].append(n.rchild)
+                enum.append(n)
+        return enum
 
-# Takes a sorted list (lowest to highest) and arranges it for the creation of an optimal binary tree (original list is not modified)
+
+# Takes a sorted list (lowest to highest) and arranges it for the creation of an optimal binary tree
+# (original list is not modified)
 def tree_sort(input_list):
     if len(input_list) <= 1:
         return input_list.copy()
     l = []
-    midpoint = math.ceil((len(input_list)-1)/2)
+    midpoint = math.ceil((len(input_list) - 1) / 2)
     l.append(input_list[midpoint])
     # I had some difficulties here with infinite recursion because I didn't understand how slice worked well enough, the
     # result being the +1 on the end of the midpoint below.
-    l.extend(tree_sort(input_list[midpoint+1:]))
+    l.extend(tree_sort(input_list[midpoint + 1:]))
     l.extend(tree_sort(input_list[:midpoint]))
     return l
-
-
-
-
-
