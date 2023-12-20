@@ -1,3 +1,4 @@
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class Matrix {
@@ -47,6 +48,20 @@ public class Matrix {
         return new Matrix(out);
     }
 
+    public static ArrayList<Complex> Fourier(ArrayList<Complex> f) {
+        int n = f.size();
+        Matrix roots = nRoots(n);
+        ArrayList<Complex> out = new ArrayList<>();
+        for (int s = 0; s < n; s++) {
+            Complex sum = new Complex(0, 0);
+            for (int k = 0; k < n; k++) {
+                sum = sum.add(f.get(k).multiply(roots.nums.get(s).get(k)));
+            }
+            out.add(sum.multiply(new Complex(1f/n,0)));
+        }
+        return out;
+    }
+
     public void print() {
         for (ArrayList<Complex> vector : nums) {
             System.out.print("[");
@@ -59,5 +74,13 @@ public class Matrix {
 
     private static double round(double n, int places) {
         return ((double) Math.round(n*Math.pow(10, places)))/Math.pow(10, places);
+    }
+
+    public static boolean equal(ArrayList<Complex> a, ArrayList<Complex> b) {
+        if (a.size() != b.size()) return false;
+        for (int i = 0; i < a.size(); i++) {
+            if (!a.get(i).equals(b.get(i))) return false;
+        }
+        return true;
     }
 }

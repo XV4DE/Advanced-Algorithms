@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public class Test {
     static int passes = 0;
     static int attempts = 0;
@@ -5,6 +7,7 @@ public class Test {
         passOnTrue(testComplexMultiply());
         passOnTrue(testComplexAddition());
         passOnTrue(testNRoots());
+        passOnTrue(testFourier());
         System.out.println("Passed " + passes + " tests of " + attempts);
     }
 
@@ -48,6 +51,34 @@ public class Test {
                     return false;
                 }
             }
+        }
+        return true;
+    }
+
+    public static boolean testFourier() {
+        ArrayList<Complex> signal = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            signal.add(new Complex(0, 0));
+        }
+
+        if (!Matrix.equal(Matrix.Fourier(signal), signal)) {
+            System.out.println(Matrix.Fourier(signal));
+            return false;
+        }
+
+
+        ArrayList<Complex> signaltwo = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            signaltwo.add(new Complex(1, 0));
+        }
+        ArrayList<Complex> correct = new ArrayList<>();
+        correct.add(new Complex(1, 0));
+        for (int i = 0; i < 9; i++) {
+            correct.add(new Complex(0, 0));
+        }
+        if (!Matrix.equal(Matrix.Fourier(signaltwo), correct)) {
+            System.out.println(Matrix.Fourier(signaltwo));
+            return false;
         }
         return true;
     }
