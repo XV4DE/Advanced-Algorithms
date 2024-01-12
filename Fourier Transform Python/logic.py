@@ -68,7 +68,6 @@ def str_to_sentence(_in_str: str):
         return BasicLogicalSentence(in_str)
     idx = index_of_first_thing_to_deal_with(in_str)
     symbol = in_str[idx]
-    # print(symbol)
     if symbol == '~':
         return Negate(str_to_sentence(in_str[idx+1:]))
     if symbol == '&':
@@ -83,6 +82,8 @@ def str_to_sentence(_in_str: str):
 
 def is_indo(sentence):
     op = type(sentence)
+    if op == BasicLogicalSentence:
+        return True
     if op == Implies or op == MutuallyImplies:
         return False
     if op == Negate:
@@ -90,9 +91,71 @@ def is_indo(sentence):
     if op == And:
         return is_indo(sentence.left) and is_indo(sentence.right)
     if op == Or:
-        if type(sentence.left) == And or type(sentence.right == And):
+        if type(sentence.left) == And or type(sentence.right) == And:
             return False
         return is_indo(sentence.left) and is_indo(sentence.right)
+
+
+def indo(sentence):
+    t = type(sentence)
+    if t == BasicLogicalSentence:
+        return sentence
+    elif t == MutuallyImplies:
+        return indo_mutuallyimplies(sentence)
+    elif t == Implies:
+        return indo_implies(sentence)
+    elif t == And:
+        return indo_and(sentence)
+    elif t == Or:
+        return indo_or(sentence)
+    elif t == Negate:
+        return indo_negate(sentence)
+
+
+def indo_negate(_sentence):
+    if type(_sentence.right) == BasicLogicalSentence:
+        return _sentence
+    if type(_sentence.right) == Negate:
+        return indo(_sentence.right.right)
+    sentence = indo(_sentence.right)
+    return indo(recursive_invert(sentence))
+
+
+def recursive_invert(sentence):
+    t = type(sentence)
+    if t == BasicLogicalSentence:
+        return Negate(sentence)
+    if t == Negate:
+        return sentence.right
+    if t == And:
+        return Or(recursive_invert(sentence.left), recursive_invert(sentence.right))
+    if t == Or:
+        return And(recursive_invert(sentence.left), recursive_invert(sentence.right))
+
+
+def indo_and(_sentence):
+    return And(indo(_sentence.left), indo(_sentence.right))
+
+
+def indo_or(_sentence):
+    sentence = Or(indo(_sentence.left), indo(_sentence.right))
+    if type(sentence.left) == And:
+        return indo(And(Or(sentence.left.left, sentence.right), Or(sentence.left.right, sentence.right)))
+    if type(sentence.right) == And:
+        return indo(And(Or(sentence.right.left, sentence.left), Or(sentence.right.right, sentence.left)))
+    return sentence
+
+
+def indo_mutuallyimplies(_sentence):
+    l = indo(_sentence.left)
+    r = indo(_sentence.right)
+    return And(indo(Or(l, indo(Negate(r)))), indo(Or(indo(Negate(l)), r)))
+
+
+def indo_implies(_sentence):
+    l = indo(_sentence.left)
+    r = indo(_sentence.right)
+    return indo(Or(indo(Negate(l)), r))
 
 
 def find_op(arg: str):
@@ -234,6 +297,9 @@ class BasicLogicalSentence (LogicalSentence):
     def evaluate(self, conditions):
         return conditions[self.pc]
 
+    def __str__(self):
+        return self.pc
+
 
 class Negate(LogicalSentence):
     def __init__(self, _right: LogicalSentence):
@@ -245,6 +311,12 @@ class Negate(LogicalSentence):
 
     def evaluate(self, conditions):
         return not self.right.evaluate(conditions)
+
+    def __str__(self):
+        if type(self.right) != BasicLogicalSentence:
+            return '~(' + str(self.right) + ')'
+        else:
+            return '~' + str(self.right)
 
 
 class And(LogicalSentence):
@@ -259,6 +331,11 @@ class And(LogicalSentence):
     def evaluate(self, conditions):
         return self.left.evaluate(conditions) and self.right.evaluate(conditions)
 
+    def __str__(self):
+        l = '(' + str(self.left) + ')' if type(self.left) != BasicLogicalSentence else str(self.left)
+        r = '(' + str(self.right) + ')' if type(self.right) != BasicLogicalSentence else str(self.right)
+        return l + '&' + r
+
 
 class Or(LogicalSentence):
     def __init__(self, _left: LogicalSentence, _right: LogicalSentence):
@@ -272,6 +349,11 @@ class Or(LogicalSentence):
     def evaluate(self, conditions):
         return self.left.evaluate(conditions) or self.right.evaluate(conditions)
 
+    def __str__(self):
+        l = '(' + str(self.left) + ')' if type(self.left) != BasicLogicalSentence else str(self.left)
+        r = '(' + str(self.right) + ')' if type(self.right) != BasicLogicalSentence else str(self.right)
+        return l + '|' + r
+
 
 class MutuallyImplies(LogicalSentence):
     def __init__(self, _left: LogicalSentence, _right: LogicalSentence):
@@ -284,6 +366,11 @@ class MutuallyImplies(LogicalSentence):
 
     def evaluate(self, conditions):
         return self.left.evaluate(conditions) == self.right.evaluate(conditions)
+
+    def __str__(self):
+        l = '(' + str(self.left) + ')' if type(self.left) != BasicLogicalSentence else str(self.left)
+        r = '(' + str(self.right) + ')' if type(self.right) != BasicLogicalSentence else str(self.right)
+        return l + '<->' + r
 
 
 class Implies(LogicalSentence):
@@ -299,4 +386,9 @@ class Implies(LogicalSentence):
         l_eval = self.left.evaluate(conditions)
         r_eval = self.right.evaluate(conditions)
         return (not l_eval) or (l_eval and r_eval)
+
+    def __str__(self):
+        l = '(' + str(self.left) + ')' if type(self.left) != BasicLogicalSentence else str(self.left)
+        r = '(' + str(self.right) + ')' if type(self.right) != BasicLogicalSentence else str(self.right)
+        return l + '->' + r
 

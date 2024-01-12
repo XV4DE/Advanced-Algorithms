@@ -4,6 +4,7 @@ import random
 from classes import *
 from two_body_massless import *
 from logic import *
+from graphs import *
 
 class Testing(unittest.TestCase):
     def test_fourier_transform_all_zeros(self):
@@ -126,4 +127,46 @@ class Testing(unittest.TestCase):
     def test_logic_str_to_sentence(self):
         self.assertEquals(str_to_sentence("~a"), Negate(BasicLogicalSentence('a')))
         self.assertEquals(str_to_sentence("~(~a&~b)"), Negate(And(Negate(BasicLogicalSentence('a')), Negate(BasicLogicalSentence('b')))))
+
+    def generate_random_logical_sentence(self, pcs, count=0):
+        if count > 2:
+            return BasicLogicalSentence(random.choice(pcs))
+        choice = random.randint(1, 6)
+        if choice == 1:
+            return BasicLogicalSentence(random.choice(pcs))
+        if choice == 2:
+            return Negate(self.generate_random_logical_sentence(pcs, count + 1))
+        if choice == 3:
+            return And(self.generate_random_logical_sentence(pcs, count + 1), self.generate_random_logical_sentence(pcs, count + 1))
+        if choice == 4:
+            return Or(self.generate_random_logical_sentence(pcs, count + 1), self.generate_random_logical_sentence(pcs, count + 1))
+        if choice == 5:
+            return MutuallyImplies(self.generate_random_logical_sentence(pcs, count + 1), self.generate_random_logical_sentence(pcs, count + 1))
+        if choice == 6:
+            return Implies(self.generate_random_logical_sentence(pcs, count + 1), self.generate_random_logical_sentence(pcs, count + 1))
+
+    def test_indo(self):
+        # rando = MutuallyImplies(BasicLogicalSentence('a'), Implies(BasicLogicalSentence('b'), BasicLogicalSentence('c')))
+        # indo_rando = indo(rando)
+        # self.assertTrue(rando.is_equivalent(indo_rando))
+        # print(rando)
+        # print(indo_rando)
+        # self.assertTrue(is_indo(indo_rando))
+        for i in range(2):
+            # print(i)
+            rando = self.generate_random_logical_sentence(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'])
+            indo_rando = indo(rando)
+            # self.assertTrue(rando.is_equivalent(indo_rando))
+            # print(rando)
+            # print(indo_rando)
+            self.assertTrue(is_indo(indo_rando))
+
+    def test_any_path(self):
+        a = Node('a')
+        b = Node('b')
+        nodes = [a, b]
+        edges = [Edge(a, b, 1)]
+        g = Graph(nodes, edges)
+        self.assertEquals(g.any_path(a, b), [a, b])
+
 

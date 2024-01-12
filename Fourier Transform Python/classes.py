@@ -14,7 +14,7 @@ def n_roots(n: int):
 
 
 def w(x, of):
-    return Complex(math.cos(x/of*2*math.pi), math.sin(x/of*2*math.pi))
+    return Complex(math.cos(x / of * 2 * math.pi), math.sin(x / of * 2 * math.pi))
 
 
 def hyperceil(n):
@@ -67,7 +67,7 @@ class Complex:
 
     def __truediv__(self, other):
         if type(other) == int:
-            return Complex(self.real/other, self.imaginary/other)
+            return Complex(self.real / other, self.imaginary / other)
 
     def __abs__(self):
         return math.sqrt(math.pow(self.real, 2) + math.pow(self.imaginary, 2))
@@ -78,23 +78,35 @@ class Complex:
 
 class Vector:
     def __init__(self, _vals):
-        self.vals = _vals.copy()
+        self.vals = []
+        for val in _vals:
+            if type(val) is int:
+                self.vals.append(Complex(val, 0))
+            else:
+                self.vals.append(val)
 
     def __getitem__(self, item):
         return self.vals[item]
 
     def __mul__(self, other):
-        if type(other) == Vector:
+        if type(other) is Vector:
             assert len(self.vals) == len(other.vals) and len(self.vals) != 0
             ret = []
             for i in self:
                 total = 0
                 for j in other:
-                    total += i*j
+                    total += i * j
                 ret.append(total)
             return Vector(ret)
         if type(other) == int:
             return Vector([i * other for i in self])
+
+    def __add__(self, other):
+        if type(other) is Vector:
+            out = []
+            for i in range(len(self.vals)):
+                out.append(self.vals[i] + other.vals[i])
+            return Vector(out)
 
     def __eq__(self, other):
         return self.vals == other.vals
@@ -103,7 +115,7 @@ class Vector:
         out = ""
         for i in self.vals:
             out += str(i) + ", "
-        return "<"+out[:-2]+">"
+        return "<" + out[:-2] + ">"
 
     def __copy__(self):
         return Vector(self.vals.copy())
@@ -118,7 +130,7 @@ class Vector:
         return Polynomial(self.vals)
 
     def inverse(self):
-        return Vector([self[len(self.vals)-1-i] for i in range(len(self.vals))])
+        return Vector([self[len(self.vals) - 1 - i] for i in range(len(self.vals))])
 
     def copy(self):
         return self.__copy__()
@@ -129,8 +141,8 @@ class Vector:
     def pretty(self):
         out = ""
         for i in self.vals:
-            out += str(i.round()) + ", "
-        return "<"+out[:-2]+">"
+            out += str(i.round()) + ", " if type(i) == Complex else str(i) + ", "
+        return "<" + out[:-2] + ">"
 
     def simple_mul(self, other):
         out = []
@@ -146,7 +158,7 @@ class Vector:
             acc = Complex(0, 0)
             for k in range(n):
                 acc += roots[s][k] * self[k]
-            out.append(acc/n)
+            out.append(acc / n)
         return Vector(out)
 
     def fast_fourier_transform(self):
@@ -157,7 +169,7 @@ class Vector:
         odds = self.get_odds().fast_fourier_transform()
         out = []
         for k in range(n):
-            out.append((evens[k % evens.size()] + odds[k % evens.size()] * w(k, n))/2)
+            out.append((evens[k % evens.size()] + odds[k % evens.size()] * w(k, n)) / 2)
         return Vector(out)
 
     def fft(self):
@@ -221,16 +233,16 @@ class Polynomial:
             out = [0 for i in range(self.size() * 2 - 1)]
             for m in range(self.size()):
                 for l in range(self.size()):
-                    out[l+m] = self[m] * other[l] + out[m+l]
+                    out[l + m] = self[m] * other[l] + out[m + l]
             return Polynomial(out)
         if type(other) == int:
-            return Polynomial([i*other for i in self.coefficients])
+            return Polynomial([i * other for i in self.coefficients])
 
     def __str__(self):
         out = ""
         for i in range(self.size()):
             out += "(" + str(self.coefficients[i]) + ")" + "x^" + str(i) + " + "
-        return "P"+out[:-3]+"P"
+        return "P" + out[:-3] + "P"
 
     def pretty(self):
         out = ""
@@ -244,7 +256,7 @@ class Polynomial:
     def eval(self, x):
         acc = Complex(0, 0)
         for i in range(self.size()):
-            acc += x^i * self[i]
+            acc += x ^ i * self[i]
 
     def as_vector(self):
         return Vector(self.coefficients.copy())
@@ -257,12 +269,14 @@ class Polynomial:
         return Polynomial(c)
 
     def fast_mul(self, other):
-        return self.pad_for_fast_mul().as_vector().fft().simple_mul(other.pad_for_fast_mul().as_vector().fft()).inverse_fft().as_polynomial()*hyperceil(self.size()*2)
+        return self.pad_for_fast_mul().as_vector().fft().simple_mul(
+            other.pad_for_fast_mul().as_vector().fft()).inverse_fft().as_polynomial() * hyperceil(self.size() * 2)
 
 
 class Matrix:
-    def __init__(self, _vals):
+    def __init__(self, _vals, _labels=None):
         self.vals = _vals.copy()
+        self.labels = _labels
 
     def __getitem__(self, item):
         return self.vals[item]
@@ -272,6 +286,13 @@ class Matrix:
             return self._dot_prod_matrix(other)
         elif type(other) == Vector:
             return self._dot_prod_vector(other)
+
+    def __add__(self, other):
+        if type(other) == Matrix:
+            out = []
+            for i in range(len(self.vals)):
+                out.append(self.vals[i] + other.vals[i])
+            return Matrix(out)
 
     def size(self):
         return len(self.vals)
@@ -287,7 +308,7 @@ class Matrix:
                 for k in range(size):
                     acc += self[i][k] * other[k][j]
                 row.append(acc)
-            ret.append(row)
+            ret.append(Vector(row))
         return Matrix(ret)
 
     def _dot_prod_vector(self, other):
@@ -301,3 +322,31 @@ class Matrix:
             ret.append(acc)
         return Vector(ret)
 
+    def print(self):
+        for i in range(len(self.vals)):
+            print(self.vals[i].pretty()) if self.labels is None else print(self.labels[i] + ' ' + self.vals[i].pretty())
+
+    def experimental_indep_finder(self, k):
+        answer = []
+        for i in range(len(self.vals)):
+            v = []
+            for j in range(len(self.vals[0].vals)):
+                v.append(0)
+            answer.append(Vector(v))
+        answer = Matrix(answer)
+
+        a = Matrix(self.vals)
+
+        b = Matrix(self.vals)
+
+        for i in range(k * 2):
+            b *= a
+            answer += b
+
+        return answer
+
+    def diagonal(self):
+        out = []
+        for i in range(len(self.vals)):
+            out.append(self.vals[i][i])
+        return Vector(out)
