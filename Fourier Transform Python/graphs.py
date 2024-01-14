@@ -153,6 +153,7 @@ class Graph:
                     to_remove.append(node)
             for node in to_remove:
                 self.nodes.pop(node)
+    #
 
     def biggest_fully_connected_set(self, k):
         out = []
