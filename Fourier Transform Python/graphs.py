@@ -4,6 +4,19 @@ from numpy.linalg import matrix_power
 import copy
 
 
+def graph_from_file(file_name: str):
+    assert file_name[-4:] == ".txt", "graph_from_file takes a .txt file name."
+    with open(file_name, "r") as f:
+        lines = f.readlines()
+        node_count = int(lines[0])
+        g = Graph([Node(str(i)) for i in range(node_count)], [])
+
+        for i in range(1, len(lines)):
+            a, b = lines[i].strip().split("-")
+            g.connect(g.get_node(a), g.get_node(b), 0)
+    return g
+
+
 class Node:
     def __init__(self, _name=None):
         self.name = _name
@@ -40,8 +53,31 @@ class Graph:
                 return True
         return False
 
+    def is_fully_connected(self, some_nodes):
+        for n0 in some_nodes:
+            for n1 in some_nodes:
+                if not self.are_connected(n0, n1):
+                    return False
+        return True
+
     def connect(self, a: Node, b: Node, value: int):
         self.edges.append(Edge(a, b, value))
+
+    def disconnect(self, a: Node, b: Node):
+        self.edges.pop(self.get_edge(a, b))
+
+    def get_node(self, name: str):
+        out = [node for node in self.nodes if node.name == name]
+        if len(out) == 0:
+            return None
+        if len(out) == 1:
+            return out[0]
+        return out
+
+    def get_edge(self, start: Node, end: Node):
+        for edge in self.edges:
+            if edge.start == start and edge.end == end:
+                return edge
 
     def neighbors(self, a: Node):
         connections = []
@@ -86,7 +122,7 @@ class Graph:
     def experimental_indep_finder(self, k):
         adj_mat = self.adjacency_matrix()
         b = copy.deepcopy(adj_mat)
-        for i in range(2, k * 2 + 2):
+        for i in range(2, k + 1):
             b += matrix_power(adj_mat, i)
         return b
 
@@ -100,6 +136,23 @@ class Graph:
             return None
         else:
             return current_max
+
+    def remove(self, node):
+        for neighbor in self.neighbors(node):
+            self.disconnect(node, neighbor)
+        self.nodes.pop(node)
+
+    def cull(self, k: int):
+        keep_going = True
+        while keep_going:
+            keep_going = False
+            to_remove = []
+            for node in self.nodes:
+                if len(node.neighbors) < k - 1:
+                    keep_going = True
+                    to_remove.append(node)
+            for node in to_remove:
+                self.nodes.pop(node)
 
     def biggest_fully_connected_set(self, k):
         out = []
