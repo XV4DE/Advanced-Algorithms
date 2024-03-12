@@ -209,6 +209,54 @@ def int_to_truth_permutation(n: int, pcs):
     return out
 
 
+# Returns a list of all logical sentences contained within the input that are not basic logical sentences. If a
+# subsentence (subformula)'s left child is also a subsentence it will appear immediately after it in the list, the right
+# child will follow immediately after that assuming it meets the same requirements.
+def all_subformulas(ls):
+    if type(ls) == BasicLogicalSentence:
+        return []
+    out = [ls]
+    if type(ls) is not Negate and type(ls.left) is not BasicLogicalSentence:
+        out.append(all_subformulas(ls.left)[0])
+    if type(ls.right) is not BasicLogicalSentence:
+        out.append(all_subformulas(ls.right)[0])
+    if type(ls) is not Negate:
+        out.extend(all_subformulas(ls.left)[1:])
+    out.extend(all_subformulas(ls.right)[1:])
+    return out
+
+
+# Returns an equivalent logical sentence in non-indo cnf3 as described in
+# https://en.wikipedia.org/wiki/Tseytin_transformation
+def cnf3(ls):
+    subformulas = all_subformulas(ls)
+    out = BasicLogicalSentence('0')
+    for i in range(len(subformulas)):
+        # This block of ifs is entirely dedicated to forcing the output to make use of the newly created pcs when
+        # defining a subsentence.
+        if type(subformulas[i]) is Negate:
+            if type(subformulas[i].right) is BasicLogicalSentence:
+                subformula = subformulas[i]
+            else:
+                subformula = Negate(BasicLogicalSentence(str(i+1)))
+        else:
+            idx = i + 1
+            if type(subformulas[i].left) is BasicLogicalSentence:
+                left = subformulas[i].left
+            else:
+                left = BasicLogicalSentence(str(idx))
+                idx += 1
+
+            if type(subformulas[i].right) is BasicLogicalSentence:
+                right = subformulas[i].right
+            else:
+                right = BasicLogicalSentence(str(idx))
+            subformula = type(subformulas[i])(left, right)
+
+        out = And(out, MutuallyImplies(BasicLogicalSentence(str(i)), subformula))
+    return out
+
+
 class TruthTable:
     def __init__(self, _keys=None, _values=None):
         if _values is None:
