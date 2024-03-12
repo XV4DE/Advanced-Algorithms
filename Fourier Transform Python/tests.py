@@ -169,4 +169,15 @@ class Testing(unittest.TestCase):
         g = Graph(nodes, edges)
         self.assertEquals(g.any_path(a, b), [a, b])
 
+    def test_cnf3(self):
+        for i in range(100):
+            rs = self.generate_random_logical_sentence(['a', 'b'])
+            if rs.is_satisfiable() != cnf3(rs).is_satisfiable():
+                print(rs)
+                rs.truth_table().print()
+
+                print(cnf3(rs))
+                cnf3(rs).truth_table().print()
+            self.assertEquals(rs.is_satisfiable(), cnf3(rs).is_satisfiable())
+
 

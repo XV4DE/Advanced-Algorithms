@@ -203,9 +203,11 @@ def bits(n):
 
 
 def int_to_truth_permutation(n: int, pcs):
+    # print(f"n = {n}, pcs = {pcs}")
     out = {}
     for i in range(len(pcs)):
-        out[pcs[i]] = bool(bits(n)[i]) if i < len(bits(n)) else False
+        idx = len(pcs) - 1 - i
+        out[pcs[idx]] = bool(bits(n)[len(bits(n)) - 1 - i]) if i < len(bits(n)) else False
     return out
 
 
@@ -231,26 +233,30 @@ def all_subformulas(ls):
 def cnf3(ls):
     subformulas = all_subformulas(ls)
     out = BasicLogicalSentence('0')
+    next_free_idx = 1
     for i in range(len(subformulas)):
+        if next_free_idx < i + 1:
+            next_free_idx = i + 1
         # This block of ifs is entirely dedicated to forcing the output to make use of the newly created pcs when
         # defining a subsentence.
         if type(subformulas[i]) is Negate:
             if type(subformulas[i].right) is BasicLogicalSentence:
                 subformula = subformulas[i]
             else:
-                subformula = Negate(BasicLogicalSentence(str(i+1)))
+                subformula = Negate(BasicLogicalSentence(str(next_free_idx)))
+                next_free_idx += 1
         else:
-            idx = i + 1
             if type(subformulas[i].left) is BasicLogicalSentence:
                 left = subformulas[i].left
             else:
-                left = BasicLogicalSentence(str(idx))
-                idx += 1
+                left = BasicLogicalSentence(str(next_free_idx))
+                next_free_idx += 1
 
             if type(subformulas[i].right) is BasicLogicalSentence:
                 right = subformulas[i].right
             else:
-                right = BasicLogicalSentence(str(idx))
+                right = BasicLogicalSentence(str(next_free_idx))
+                next_free_idx += 1
             subformula = type(subformulas[i])(left, right)
 
         out = And(out, MutuallyImplies(BasicLogicalSentence(str(i)), subformula))
@@ -302,12 +308,17 @@ class LogicalSentence:
         out = TruthTable()
         pcs = self.pcs_used()
         for i in range(2 ** len(pcs)):
-            perm = int_to_truth_permutation(i, list(pcs))
+            fixed_pcs = list(pcs)
+            fixed_pcs.sort(key=ord)
+            perm = int_to_truth_permutation(i, fixed_pcs)
             out[perm] = self.evaluate(perm)
         return out
 
     def is_valid(self):
         return False not in self.truth_table().values
+
+    def is_satisfiable(self):
+        return True in self.truth_table().values
 
     def is_equivalent(self, other):
         return (self == other).is_valid()
